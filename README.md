@@ -1,20 +1,4 @@
-# Remotion + React Three Fiber Starter Template
-
-<p align="center">
-    <img src="demo.gif" style="border-radius: 5px">
-</p>
-
-[This is a template repository, click "Use this template" to create a repository based off this template!](https://github.com/JonnyBurger/remotion-template-three/generate)
-
-This is a lightweight boilerplate for [Remotion](https://github.com/jonnyburger/remotion) with [React Three Fiber](https://github.com/pmndrs/react-three-fiber) and [@remotion/three](http://remotion.dev/docs/three) preinstalled.
-
-- [Remotion documentation](https://remotion.dev)
-- [React Three Fiber documentation](https://docs.pmnd.rs/react-three-fiber)
-- [@remotion/three documentation](http://remotion.dev/docs/three)
-
-This example features a phone with a screen. You can easily switch out the video and change a series of parameters, like size, color, aspect ratio, corner radius etc. of the phone.
-
-You can also simply delete everything inside the canvas to start off with your own 3D project.
+Remotion adaptation of the SpaceDust component at https://github.com/winkerVSbecks/3d-particle-effects-demo
 
 ## Commands
 
