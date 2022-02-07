@@ -1,47 +1,86 @@
-import {getVideoMetadata, VideoMetadata} from '@remotion/media-utils';
-import {ThreeCanvas, useVideoTexture} from '@remotion/three';
-import React, {useEffect, useRef, useState} from 'react';
-import {AbsoluteFill, useVideoConfig, Video} from 'remotion';
-import {Phone} from './Phone';
+import * as THREE from 'three';
+import {useRef, useMemo, useEffect} from 'react';
+import {interpolate, random, useCurrentFrame, useVideoConfig} from 'remotion';
+import {ThreeCanvas} from '@remotion/three';
+import {InstancedMesh, PointLight} from 'three';
 
-const container: React.CSSProperties = {
-	backgroundColor: 'white',
-};
+const count = 10000;
 
-const videoStyle: React.CSSProperties = {
-	position: 'absolute',
-	opacity: 0,
-};
+export const SpaceDust = () => {
+	const mesh = useRef<InstancedMesh>();
+	const light = useRef<PointLight>();
 
-export const Scene: React.FC<{
-	videoSrc: string;
-	baseScale: number;
-}> = ({baseScale, videoSrc}) => {
-	const videoRef = useRef<HTMLVideoElement>(null);
+	const frame = useCurrentFrame();
 	const {width, height} = useVideoConfig();
-	const [videoData, setVideoData] = useState<VideoMetadata | null>(null);
+
+	// Generate some random positions, speed factors and timings
+	const particles = useMemo(() => {
+		const temp = [];
+		for (let i = 0; i < count; i++) {
+			const time = interpolate(random('time'), [0, 1], [0, 100]);
+			const factor = interpolate(random('factor'), [0, 1], [20, 120]);
+			const speed = interpolate(random('speed'), [0, 1], [0.01, 0.015]) / 2;
+			const x = interpolate(random('x'), [0, 1], [-50, 50]);
+			const y = interpolate(random('y'), [0, 1], [-50, 50]);
+			const z = interpolate(random('z'), [0, 1], [-50, 50]);
+
+			temp.push({time, factor, speed, x, y, z});
+		}
+		return temp;
+	}, []);
+
+	const dummy = useMemo(() => new THREE.Object3D(), []);
 
 	useEffect(() => {
-		getVideoMetadata(videoSrc)
-			.then((data) => setVideoData(data))
-			.catch((err) => console.log(err));
-	}, [videoSrc]);
+		const {current} = mesh;
+		if (!current) {
+			return;
+		}
+		// Run through the randomized data to calculate some movement
+		particles.forEach((particle, index) => {
+			const {factor, speed, x, y, z} = particle;
 
-	const texture = useVideoTexture(videoRef);
+			// Update the particle time
+			const t = (frame + 1) * speed;
+
+			// Update the particle position based on the time
+			// This is mostly random trigonometry functions to oscillate around the (x, y, z) point
+			dummy.position.set(
+				x + Math.cos((t / 10) * factor) + (Math.sin(t * 1) * factor) / 10,
+				y + Math.sin((t / 10) * factor) + (Math.cos(t * 2) * factor) / 10,
+				z + Math.cos((t / 10) * factor) + (Math.sin(t * 3) * factor) / 10
+			);
+
+			// Derive an oscillating value which will be used
+			// for the particle size and rotation
+			const s = Math.cos(t);
+			dummy.scale.set(s, s, s);
+			dummy.rotation.set(s * 5, s * 5, s * 5);
+			dummy.updateMatrix();
+
+			// And apply the matrix to the instanced item
+			current.setMatrixAt(index, dummy.matrix);
+		});
+		current.instanceMatrix.needsUpdate = true;
+	}, [dummy, frame, particles]);
+
 	return (
-		<AbsoluteFill style={container}>
-			<Video ref={videoRef} src={videoSrc} style={videoStyle} />
-			{videoData ? (
-				<ThreeCanvas linear width={width} height={height}>
-					<ambientLight intensity={1.5} color={0xffffff} />
-					<pointLight position={[10, 10, 0]} />
-					<Phone
-						baseScale={baseScale}
-						videoTexture={texture}
-						aspectRatio={videoData.aspectRatio}
-					/>
-				</ThreeCanvas>
-			) : null}
-		</AbsoluteFill>
+		<ThreeCanvas
+			width={width}
+			height={height}
+			camera={{fov: 100, position: [0, 0, 30]}}
+			onCreated={({gl, size, camera}) => {
+				if (size.width < 600) {
+					camera.position.z = 45;
+				}
+				gl.setClearColor(new THREE.Color('#020207'));
+			}}
+		>
+			<pointLight ref={light} distance={40} intensity={8} color="lightblue" />
+			<instancedMesh ref={mesh} args={[null, null, count]}>
+				<dodecahedronBufferGeometry args={[0.2, 0]} />
+				<meshPhongMaterial color="#050505" />
+			</instancedMesh>
+		</ThreeCanvas>
 	);
 };
