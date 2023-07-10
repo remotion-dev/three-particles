@@ -7,6 +7,7 @@ import React from 'react';
 import {InstancedMesh, PointLight} from 'three';
 import * as THREE from 'three';
 
+
 const count = 10000;
 
 export const Dust: React.FC = () => {
@@ -49,6 +50,7 @@ export const Dust: React.FC = () => {
 			// Update the particle position based on the time
 			// This is mostly random trigonometry functions to oscillate around the (x, y, z) point
 			dummy.position.set(
+				// eslint-disable-next-line no-implicit-coercion
 				x + Math.cos((t / 10) * factor) + (Math.sin(t * 1) * factor) / 10,
 				y + Math.sin((t / 10) * factor) + (Math.cos(t * 2) * factor) / 10,
 				z + Math.cos((t / 10) * factor) + (Math.sin(t * 3) * factor) / 10
@@ -70,7 +72,7 @@ export const Dust: React.FC = () => {
 	return (
 		<>
 			<pointLight ref={light} distance={40} intensity={8} color="lightblue" />
-			<instancedMesh ref={mesh} args={[null, null, count]}>
+			<instancedMesh ref={mesh} args={[undefined, undefined, count]}>
 				<dodecahedronBufferGeometry args={[0.2, 0]} />
 				<meshPhongMaterial color="#050505" />
 			</instancedMesh>
