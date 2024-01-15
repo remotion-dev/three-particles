@@ -7,12 +7,11 @@ import React from 'react';
 import {InstancedMesh, PointLight} from 'three';
 import * as THREE from 'three';
 
-
 const count = 10000;
 
 export const Dust: React.FC = () => {
-	const mesh = useRef<InstancedMesh>();
-	const light = useRef<PointLight>();
+	const mesh = useRef<InstancedMesh>(null);
+	const light = useRef<PointLight>(null);
 
 	const frame = useCurrentFrame();
 
